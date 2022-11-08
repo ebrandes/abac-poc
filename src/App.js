@@ -13,7 +13,7 @@ function App() {
   const [rules, setRules] = useState([]);
 
   useEffect(() => {
-    const x = [
+    const returnFromBFF = [
       {
         program: "CLIENTES",
         description: "Módulo de clientes",
@@ -142,7 +142,7 @@ function App() {
     //   return acc;
     // }, {});
 
-    const mainRules = x?.reduce((acc, cur, i) => {
+    const mainRules = returnFromBFF?.reduce((acc, cur, i) => {
       acc[cur?.program] = cur?.permissions?.reduce((acc, cur, i) => {
         acc[cur.description] = true;
         return acc;
