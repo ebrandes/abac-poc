@@ -1,74 +1,192 @@
 import { useEffect, useState } from "react";
-import { AbacProvider, AllowedTo, useAbac } from "react-abac";
+import { AbacProvider, AllowedTo } from "react-abac";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "./App.css";
-import { useUserContext } from "./User.context";
 import "./Axios.config";
-import BaseRequest from "./Axios.config";
+import Clients from "./Clients";
+import Posts from "./Posts";
 import { RULES } from "./rules";
+import { useUserContext } from "./User.context";
 
 function App() {
   const { user } = useUserContext();
-  const [posts, setPosts] = useState([]);
-
-  async function getPosts() {
-    const { data } = await BaseRequest.get("/posts", { retry: 3 });
-    setPosts(data);
-  }
+  const [rules, setRules] = useState([]);
 
   useEffect(() => {
-    getPosts();
-    return () => null;
+    const x = [
+      {
+        program: "CLIENTES",
+        description: "Módulo de clientes",
+        permissions: [
+          {
+            code: "E",
+            description: "ELIMINAR",
+          },
+          {
+            code: "I",
+            description: "INCLUIR",
+          },
+          {
+            code: "M",
+            description: "MODIFICAR",
+          },
+          {
+            code: "C",
+            description: "CONSULTAR",
+          },
+        ],
+      },
+      {
+        program: "CLIENTES_DETALLES",
+        description: "Clientes: pestaña detalles del cliente",
+        permissions: [
+          {
+            code: "E",
+            description: "ELIMINAR",
+          },
+          {
+            code: "M",
+            description: "MODIFICAR",
+          },
+          {
+            code: "C",
+            description: "CONSULTAR",
+          },
+          {
+            code: "I",
+            description: "INCLUIR",
+          },
+        ],
+      },
+      {
+        program: "CLIENTES_ACCIONES",
+        description: "Clientes: pestaña acciones del cliente",
+        permissions: [
+          {
+            code: "C",
+            description: "CONSULTAR",
+          },
+          {
+            code: "E",
+            description: "ELIMINAR",
+          },
+          {
+            code: "I",
+            description: "INCLUIR",
+          },
+          {
+            code: "M",
+            description: "MODIFICAR",
+          },
+        ],
+      },
+      {
+        program: "USUARIOS_ROLES",
+        description: "Usuários: configuraciones de roles, programas y permisos",
+        permissions: [
+          {
+            code: "M",
+            description: "MODIFICAR",
+          },
+          {
+            code: "C",
+            description: "CONSULTAR",
+          },
+          {
+            code: "E",
+            description: "ELIMINAR",
+          },
+          {
+            code: "I",
+            description: "INCLUIR",
+          },
+        ],
+      },
+      {
+        program: "CLIENTES_RESUMEN",
+        description: "Clientes: pestaña Resumen del cliente",
+        permissions: [
+          {
+            code: "E",
+            description: "ELIMINAR",
+          },
+          {
+            code: "I",
+            description: "INCLUIR",
+          },
+          {
+            code: "M",
+            description: "MODIFICAR",
+          },
+          {
+            code: "C",
+            description: "CONSULTAR",
+          },
+        ],
+      },
+      {
+        program: "CLIENTES_RIESGOS",
+        description: "Clientes: pestaña riesgo del cliente",
+        permissions: [
+          {
+            code: "C",
+            description: "CONSULTAR",
+          },
+        ],
+      },
+      null,
+    ];
+
+    // arr.reduce(function (acc, cur, i) {
+    //   acc[i] = cur;
+    //   return acc;
+    // }, {});
+
+    const mainRules = x?.reduce((acc, cur, i) => {
+      acc[cur?.program] = cur?.permissions?.reduce((acc, cur, i) => {
+        acc[cur.description] = true;
+        return acc;
+        // [p.description]: true,
+      }, {});
+      return acc;
+    }, {});
+
+    setRules(mainRules);
+    console.log("R: ", mainRules);
+    console.log("RULE: ", RULES);
+
+    // const userPermissions = Object.entries(rules).map(([_, value]) => value);
+    // const rx = Object.entries(rules).map(([_, value]) => value)
+
+    // const userRoles = userPermissions.map((up) => {
+    //   if (up) {
+    //     return Object.keys(up)[0];
+    //   }
+    //   return '';
+    // });
+    // debugger;
+    // setRules(rx);
+    // setUser({
+    //   ...user,
+    //   roles: userRoles,
+    // });
+    // console.log(userPermissions.map(up => Object.keys(up)))
+    // debugger;
+
+    // setRules(mainRoles);
+    // setUser({ ...user, roles: permissions });
   }, []);
 
   return (
-    <AbacProvider user={user} roles={user?.roles} rules={RULES}>
-      <div className="max-w-5xl mx-auto">
-        <AllowedTo perform={"VIEW_POST"}>
-          <div className="mt-20 grid grid-flow-col">
-            {posts &&
-              posts.map((p) => (
-                <div key={p.id} className="rounded overflow-hidden shadow-lg">
-                  <div className="px-6 py-4">
-                    <div className="font-bold text-xl mb-2">{p?.title}</div>
-                    <p className="text-gray-700 text-base">{p?.description}</p>
-                  </div>
-
-                  <AllowedTo perform={"EDIT_POST"} data={p}>
-                    <div className="px-6 pt-4 pb-2">
-                      <button
-                        className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                        onClick={() => alert("Editar")}
-                      >
-                        Editar
-                      </button>
-                    </div>
-                  </AllowedTo>
-
-                  <div className="px-6 pt-4 pb-2">
-                    <ButtonDelete post={p} />
-                  </div>
-                </div>
-              ))}
-          </div>
-        </AllowedTo>
-      </div>
+    <AbacProvider user={user} roles={user?.roles} rules={rules}>
+      <Router>
+        <Routes>
+          <Route path="/users" element={<Clients />} />
+          <Route exact path="/" element={<Posts />} />
+        </Routes>
+      </Router>
     </AbacProvider>
   );
 }
-
-const ButtonDelete = ({ post }) => {
-  const { userHasPermissions } = useAbac();
-  if (userHasPermissions("DELETE_POST", post)) {
-    return (
-      <button
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        onClick={() => alert("Deletar")}
-      >
-        Deletar
-      </button>
-    );
-  }
-  return <></>;
-};
 
 export default App;
